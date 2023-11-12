@@ -34,7 +34,7 @@ class Cifar(nn.Module):
         num_batches = num_samples // self.config.batch_size
         learning_rate = 0.1
         print('### Training... ###')
-        for epoch in range(1, max_epoch+1):
+        for epoch in range(1):
             start_time = time.time()
             # Shuffle
             shuffle_index = np.random.permutation(num_samples)
@@ -89,10 +89,13 @@ class Cifar(nn.Module):
 
     def test_or_validate(self, x, y, checkpoint_num_list):
         self.network.eval()
-        x = x.reshape(-1, 3, 32, 32)
-        x = torch.tensor(x, dtype=torch.float32)
+        """x = x.reshape(-1, 3, 32, 32)
+        x = torch.tensor(x, dtype=torch.float32)"""
+        x_test_pre = []
+        for i in x:
+                x_test_pre.append(parse_record(i,False))
+        x_test_pre = torch.tensor(x_test_pre, dtype=torch.float32)
         # Now you can pass x_tensor to the network
-        print("aaaaa",x.size())
         print('### Test or Validation ###')
         for checkpoint_num in checkpoint_num_list:
             checkpointfile = os.path.join(self.config.modeldir, 'model-%d.ckpt'%(checkpoint_num))
@@ -100,18 +103,19 @@ class Cifar(nn.Module):
             ### YOUR CODE HERE
             preds = []
             #x_test_pre = []
-            """for i in x:
-                x_test_pre.append(parse_record(x[i],False))"""
-            for i in tqdm(range(x.shape[0])):
+            for i in tqdm(range(x_test_pre.shape[0])):
                 with torch.no_grad():
-                    outputs = self.network(x[i].unsqueeze(0))
+                    outputs = self.network(x_test_pre[i].unsqueeze(0))
                 _, predicted = torch.max(outputs, 1)
                 preds.append(predicted.item())
-            
+            print("predssss:",preds)
             ### END CODE HERE
 
-            y = torch.tensor(y)
-            preds = torch.tensor(preds)
+            y = torch.tensor(y).reshape(-1,1)
+            print(y.size())
+            preds = torch.tensor(preds).reshape(-1,1)
+            print("yyy:",y.size())
+            print("pred",preds.size())
             print('Test accuracy: {:.4f}'.format(torch.sum(preds==y)/y.shape[0]))
     
     def save(self, epoch):
